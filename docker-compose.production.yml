@@ -4,8 +4,9 @@ services:
     container_name: via7-mongodb
     restart: unless-stopped
 
-    volumes:
-      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
 
     command:
       [
@@ -16,9 +17,8 @@ services:
         "--auth"
       ]
 
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongodb_data:/data/db
 
     networks:
       - via7-internal
@@ -41,15 +41,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 30s
+      start_period: 40s
 
   redis:
     image: redis:7-alpine
     container_name: via7-redis
     restart: unless-stopped
-
-    volumes:
-      - redis_data:/data
 
     command:
       [
@@ -60,6 +57,9 @@ services:
         "${REDIS_PASSWORD}"
       ]
 
+    volumes:
+      - redis_data:/data
+
     networks:
       - via7-internal
 
@@ -67,16 +67,65 @@ services:
       test:
         [
           "CMD-SHELL",
-          "redis-cli -a \"${REDIS_PASSWORD}\" ping | grep PONG"
+          "redis-cli --no-auth-warning -a \"$${REDIS_PASSWORD}\" ping | grep PONG"
         ]
       interval: 30s
       timeout: 10s
       retries: 5
 
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: via7-app
+    restart: unless-stopped
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    ports:
+      - "127.0.0.1:3000:3000"
+
+    networks:
+      - via7-internal
+      - via7-public
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -qO- http://127.0.0.1:3000/api/current-user >/dev/null || exit 1"
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
 networks:
   via7-internal:
     driver: bridge
     internal: true
+
+  via7-public:
+    driver: bridge
 
 volumes:
   mongodb_data:
