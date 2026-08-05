@@ -1,0 +1,11 @@
+{
+  "Navbar": {
+    "search": "Search",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "favorites": "Favorites",
+    "inbox": "Inbox",
+    "createListing": "Create Listing"
+  }
+}

@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+html,
+body,
+:root{
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+html[lang="ar"] body {
+  font-family: var(--font-arabic), sans-serif;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.airbnb-map-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.airbnb-map-popup .leaflet-popup-content {
+  margin: 0;
+  width: 300px !important;
+}
+
+.airbnb-map-popup .leaflet-popup-tip-container {
+  margin-top: -1px;
+}
+
+.airbnb-map-popup .leaflet-popup-close-button {
+  display: none;
+}
+
+.airbnb-map-popup {
+  min-width: 300px;
+}
+
+.airbnb-map-popup .leaflet-popup-content-wrapper,
+.airbnb-map-popup .leaflet-popup-content {
+  max-width: none !important;
+}
+
+@media (max-width: 767px) {
+  .search-date-range .rdrMonths {
+    flex-direction: column !important;
+  }
+
+  .search-date-range .rdrMonth {
+    width: 100% !important;
+  }
+}

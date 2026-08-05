@@ -1,0 +1,379 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  HOST
+  VIP_HOST
+  AGENCY
+  MANAGER
+  ADMIN
+}
+
+model User {
+  id             String  @id @default(auto()) @map("_id") @db.ObjectId
+  name           String?
+  email          String? @unique
+  hashedPassword String?
+
+  emailVerified DateTime?
+
+  phoneNumber    String?
+  dateOfBirth    DateTime?
+  avatarUrl      String?
+  bio            String?
+  credits        Int       @default(0)
+  role           UserRole  @default(USER)
+  favoriteIds    String[]  @db.ObjectId
+  isBanned       Boolean   @default(false)
+  blockedUserIds String[]  @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listings        Listing[]
+  jobs            Job[]
+  cars            Car[]
+  tourism         Tourism[]
+  services        Services[]
+  listingViews    ListingView[]
+  reviewsWritten  Review[]      @relation("ReviewAuthor")
+  reviewsReceived Review[]      @relation("ReviewTarget")
+  messages        Message[]
+  auditLogs       AuditLog[]
+
+  @@index([role])
+  @@index([isBanned])
+  @@index([createdAt])
+}
+
+model EmailVerificationToken {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  createdAt DateTime @default(now())
+
+  @@unique([email, token])
+  @@index([email])
+  @@index([expires])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String
+  token     String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([expires])
+}
+
+enum RentPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum AuditAction {
+  CREATE_LISTING
+  UPDATE_LISTING
+  DELETE_LISTING
+
+  ADMIN_UPDATE_LISTING
+  ADMIN_CHANGE_LISTING_OWNER
+  MANAGER_CHANGE_LISTING_OWNER
+  SET_FEATURED
+  SET_ACTIVE
+
+  BAN_USER
+  UNBAN_USER
+  UPDATE_USER_ROLE
+  DELETE_USER
+
+  MANAGER_UPDATE_USER_ROLE
+  MANAGER_BAN_USER
+  MANAGER_UNBAN_USER
+
+  MANAGER_UPDATE_LISTING
+  MANAGER_SET_ACTIVE
+  MANAGER_SET_FEATURED
+
+  MANAGER_UPDATE_REVIEW
+  MANAGER_HIDE_REVIEW
+  MANAGER_UNHIDE_REVIEW
+}
+
+enum AuditTargetType {
+  LISTING
+  USER
+  REVIEW
+  CONVERSATION
+  SYSTEM
+}
+
+model AuditLog {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  userId String? @db.ObjectId
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  action     AuditAction
+  targetType AuditTargetType
+  targetId   String?         @db.ObjectId
+
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([targetType])
+  @@index([targetId])
+  @@index([createdAt])
+}
+
+model ListingBlockedDate {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  listingId String  @db.ObjectId
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  date DateTime
+
+  createdAt DateTime @default(now())
+
+  @@unique([listingId, date])
+  @@index([listingId])
+  @@index([date])
+}
+
+model Listing {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  title       String
+  description String
+  price       Int
+
+  governorate String
+  city        String?
+  district    String?
+  street      String?
+  address     String?
+
+  latitude  Float?
+  longitude Float?
+
+  category      String
+  type          String
+  purpose       String
+  rentPeriod    RentPeriod?
+  availableFrom DateTime?
+  featuredUntil DateTime?
+  boostUntil    DateTime?
+  highlighted   Boolean              @default(false)
+  guestCount    Int?
+  bedroomCount  Int?
+  bedCount      Int?
+  bathroomCount Int?
+  area          Int?
+  amenities     String[]
+  blockedDates  ListingBlockedDate[]
+  imageUrl      String?
+  imageUrls     String[]
+  isActive      Boolean              @default(true)
+  favoriteCount Int                  @default(0)
+
+  featured  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  viewCount Int      @default(0)
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  views         ListingView[]
+  reviews       Review[]
+  conversations Conversation[]
+
+  @@index([userId])
+  @@index([governorate])
+  @@index([city])
+  @@index([category])
+  @@index([type])
+  @@index([purpose])
+  @@index([isActive])
+  @@index([featured])
+  @@index([createdAt])
+  @@index([price])
+  @@index([availableFrom])
+  @@index([governorate, category, type, purpose, isActive, createdAt])
+}
+
+model ListingView {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  userId    String @db.ObjectId
+  listingId String @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  listing Listing @relation(fields: [listingId], references: [id])
+
+  @@unique([userId, listingId])
+  @@index([listingId])
+  @@index([userId])
+}
+
+model Review {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  rating  Int
+  comment String?
+
+  isHidden Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId  String  @db.ObjectId
+  targetId  String  @db.ObjectId
+  listingId String? @db.ObjectId
+
+  author  User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  target  User     @relation("ReviewTarget", fields: [targetId], references: [id])
+  listing Listing? @relation(fields: [listingId], references: [id])
+
+  @@index([authorId])
+  @@index([targetId])
+  @@index([listingId])
+  @@index([createdAt])
+  @@index([isHidden])
+}
+
+model Conversation {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  userIds String[] @db.ObjectId
+
+  listingId String  @db.ObjectId
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([listingId])
+  @@index([updatedAt])
+}
+
+model Message {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  body           String
+  isRead         Boolean  @default(false)
+  attachmentUrl  String?
+  attachmentType String?
+  attachmentName String?
+  seenIds        String[] @db.ObjectId
+
+  conversationId String       @db.ObjectId
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  senderId String @db.ObjectId
+  sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+model Car {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  brand    String
+  model    String
+  year     Int
+  price    Int
+  forRent  Boolean
+  location String
+  imageUrl String?
+
+  createdAt DateTime @default(now())
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Job {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  company     String
+  description String
+  location    String
+  salary      Int?
+
+  createdAt DateTime @default(now())
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Tourism {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  location    String
+  price       Int
+  type        String
+  available   Boolean @default(true)
+
+  imageUrl String?
+
+  createdAt DateTime @default(now())
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Services {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  location    String
+  price       Int
+  type        String
+  available   Boolean @default(true)
+
+  imageUrl String?
+
+  createdAt DateTime @default(now())
+
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}

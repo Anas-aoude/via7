@@ -1,0 +1,16 @@
+export const governorates = [
+  "Damascus",
+  "Rif Dimashq",
+  "Aleppo",
+  "Homs",
+  "Hama",
+  "Latakia",
+  "Tartus",
+  "Idlib",
+  "Daraa",
+  "As-Suwayda",
+  "Quneitra",
+  "Deir ez-Zor",
+  "Raqqa",
+  "Al-Hasakah",
+] as const;

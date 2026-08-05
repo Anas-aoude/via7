@@ -1,0 +1,193 @@
+"use client";
+
+import axios from "axios";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
+
+type UserListing = {
+  id: string;
+  title: string;
+  price: number;
+  governorate: string;
+  city: string | null;
+  category: string;
+  type: string;
+  purpose: string;
+  imageUrl: string | null;
+  imageUrls: string[];
+  isActive: boolean;
+  featured: boolean;
+  viewCount: number;
+  favoriteCount: number;
+  createdAt: string;
+};
+
+interface UserListingsClientProps {
+  listings: UserListing[];
+}
+
+const UserListingsClient: React.FC<UserListingsClientProps> = ({ listings }) => {
+  const router = useRouter();
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  const patchListing = async (
+    listingId: string,
+    data: { isActive?: boolean; featured?: boolean }
+  ) => {
+    setLoadingId(listingId);
+
+    axios
+      .patch(`/api/manager/listings/${listingId}`, data)
+      .then(() => {
+        toast.success("Listing updated");
+        router.refresh();
+      })
+      .catch((error) => {
+        toast.error(error?.response?.data?.error || "Something went wrong");
+      })
+      .finally(() => {
+        setLoadingId(null);
+      });
+  };
+
+  return (
+    <div className="border rounded-2xl overflow-hidden bg-white">
+      <table className="w-full text-sm">
+        <thead className="bg-neutral-100 text-left">
+          <tr>
+            <th className="p-4">Image</th>
+            <th className="p-4">Title</th>
+            <th className="p-4">Location</th>
+            <th className="p-4">Price</th>
+            <th className="p-4">Category</th>
+            <th className="p-4">Status</th>
+            <th className="p-4">Featured</th>
+            <th className="p-4">Views</th>
+            <th className="p-4">Created</th>
+            <th className="p-4">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {listings.map((listing) => {
+            const image =
+              listing.imageUrl ||
+              listing.imageUrls?.[0] ||
+              "/images/placeholder.jpg";
+
+            const isLoading = loadingId === listing.id;
+
+            return (
+              <tr key={listing.id} className="border-t hover:bg-neutral-50">
+                <td className="p-4">
+                  <div className="relative w-20 h-14 rounded-lg overflow-hidden bg-neutral-100">
+                    <Image
+                      src={image}
+                      alt={listing.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                </td>
+
+                <td className="p-4 font-semibold">
+                  <Link
+                    href={`/listings/${listing.id}`}
+                    className="hover:underline"
+                  >
+                    {listing.title}
+                  </Link>
+
+                  <div className="text-xs text-neutral-500 font-normal">
+                    {listing.id}
+                  </div>
+                </td>
+
+                <td className="p-4">
+                  {listing.governorate}
+                  {listing.city ? `, ${listing.city}` : ""}
+                </td>
+
+                <td className="p-4 font-semibold">${listing.price}</td>
+
+                <td className="p-4">
+                  {listing.category} / {listing.type} / {listing.purpose}
+                </td>
+
+                <td className="p-4">
+                  {listing.isActive ? (
+                    <span className="text-green-600 font-semibold">Active</span>
+                  ) : (
+                      <span className="text-red-600 font-semibold">Inactive</span>
+                    )}
+                </td>
+
+                <td className="p-4">
+                  {listing.featured ? (
+                    <span className="text-rose-500 font-semibold">Yes</span>
+                  ) : (
+                      <span className="text-neutral-500">No</span>
+                    )}
+                </td>
+
+                <td className="p-4">{listing.viewCount}</td>
+
+                <td className="p-4 text-neutral-500">
+                  {new Date(listing.createdAt).toLocaleDateString()}
+                </td>
+
+                <td className="p-4">
+                  <div className="flex flex-col gap-2 min-w-[130px]">
+                    <Link
+                      href={`/manager/listings/${listing.id}/edit`}
+                      className="text-blue-600 font-semibold hover:underline"
+                    >
+                      Edit
+                    </Link>
+
+                    <button
+                      disabled={isLoading}
+                      onClick={() =>
+                        patchListing(listing.id, {
+                          isActive: !listing.isActive,
+                        })
+                      }
+                      className="text-left text-sm text-green-700 font-semibold hover:underline disabled:opacity-40"
+                    >
+                      {listing.isActive ? "Deactivate" : "Activate"}
+                    </button>
+
+                    <button
+                      disabled={isLoading}
+                      onClick={() =>
+                        patchListing(listing.id, {
+                          featured: !listing.featured,
+                        })
+                      }
+                      className="text-left text-sm text-rose-600 font-semibold hover:underline disabled:opacity-40"
+                    >
+                      {listing.featured ? "Unfeature" : "Feature"}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+
+          {listings.length === 0 && (
+            <tr>
+              <td colSpan={10} className="p-8 text-center text-neutral-500">
+                No listings found.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default UserListingsClient;

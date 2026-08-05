@@ -1,0 +1,16 @@
+export const filterAmenities = [
+  "WiFi",
+  "Parking",
+  "Air Conditioning",
+  "Kitchen",
+  "TV",
+  "Elevator",
+  "Pool",
+  "Garden",
+  "Hot Water",
+  "Pets Allowed",
+  "Non Smoking",
+  "Gym",
+  "Heating",
+  "Water Tank",
+] as const;

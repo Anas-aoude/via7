@@ -1,0 +1,11 @@
+{
+  "Navbar": {
+    "search": "ابحث",
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "logout": "تسجيل الخروج",
+    "favorites": "المفضلة",
+    "inbox": "الرسائل",
+    "createListing": "أضف إعلان"
+  }
+}
