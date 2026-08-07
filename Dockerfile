@@ -15,6 +15,9 @@ WORKDIR /app
 
 RUN apk add --no-cache openssl libc6-compat
 
+ARG NEXT_PUBLIC_APP_URL
+ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 
