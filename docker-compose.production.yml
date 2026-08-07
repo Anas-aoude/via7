@@ -14,11 +14,14 @@ services:
         "--replSet",
         "rs0",
         "--bind_ip_all",
-        "--auth"
+        "--auth",
+        "--keyFile",
+        "/etc/mongo-keyfile"
       ]
 
     volumes:
       - mongodb_data:/data/db
+      - /opt/via7/secrets/mongo-keyfile:/etc/mongo-keyfile:ro
 
     networks:
       - via7-internal
@@ -47,6 +50,8 @@ services:
     image: redis:7-alpine
     container_name: via7-redis
     restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
 
     command:
       [
