@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { siteConfig } from "@/app/libs/seo";
 import prisma from "@/app/libs/prismadb";
+export const dynamic = "force-dynamic";
 
 const siteUrl = siteConfig.url;
 
