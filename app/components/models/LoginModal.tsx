@@ -200,21 +200,23 @@ const LoginModal = () => {
   const footerContent = (
     <div className="flex flex-col gap-4 mt-3">
       <hr />
+      {false && (
+        <>
+          <Button
+            outline
+            label={t("auth.continueWithGoogle")}
+            icon={FcGoogle}
+            onClick={() => signIn("google")}
+          />
 
-      <Button
-        outline
-        label={t("auth.continueWithGoogle")}
-        icon={FcGoogle}
-        onClick={() => signIn("google")}
-      />
-
-      <Button
-        outline
-        label={t("auth.continueWithGithub")}
-        icon={AiFillGithub}
-        onClick={() => signIn("github")}
-      />
-
+          <Button
+            outline
+            label={t("auth.continueWithGithub")}
+            icon={AiFillGithub}
+            onClick={() => signIn("github")}
+          />
+        </>
+      )}
       <div className="text-neutral-500 text-center mt-4 font-light">
         <div className="justify-center flex flex-row items-center gap-2">
           <div>{t("auth.firstTime")}</div>
