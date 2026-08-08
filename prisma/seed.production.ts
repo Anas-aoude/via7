@@ -8,14 +8,19 @@ const prisma = new PrismaClient();
 
 const SEED_EMAIL_PREFIX = "seed.";
 
-const seedPassword = process.env.PRODUCTION_SEED_PASSWORD;
+function getSeedPassword(): string {
+  const password = process.env.PRODUCTION_SEED_PASSWORD;
 
-if (!seedPassword) {
-  throw new Error(
-    "PRODUCTION_SEED_PASSWORD is required. Do not use a hard-coded production seed password."
-  );
+  if (!password) {
+    throw new Error(
+      "PRODUCTION_SEED_PASSWORD is required. Do not use a hard-coded production seed password."
+    );
+  }
+
+  return password;
 }
 
+const seedPassword = getSeedPassword();
 
 
 
